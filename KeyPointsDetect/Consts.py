@@ -5,12 +5,6 @@ import numpy as np
 import pandas as pd
 import os.path
 
-"""
-name:       
-functional: 
-inputs:     
-outputs:    
-"""
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -52,15 +46,27 @@ train_shuffle = True;   test_shuffle = True
 train_drop_last = True; test_drop_last = True
 train_num_workers = 0;  test_num_workers = 0
 
+
 # 可改动的地方
-train_epoch = 1
+train_epoch = 2
 train_batch_size = 5;   test_batch_size = 5
 train_lr = 0.01
-train_result_show_steps = 250  # 训练到多少次的时候输出结果
+test_show_train_result_steps = 250  # 训练到多少次的时候输出结果
 
-net_choice = kpnet_idx
+net_choice = with_resnet34_idx  # 选择模型类型
 optim_choice = sgd_idx
 lossfunc_choice = mae_idx
+
+
+# 模型列表(需要和上面的net_choice进行匹配，否则会不能成功导入训练好的模型)
+"""
+按训练顺序排列：
+1. Models/GPU_WithResNet18_SGDOptim_MAELoss_Epoch10_BatchSize50_LR0.01_MaxBatchLoss11.956532.pth
+2. Models/GPU_WithResNet18_SGDOptim_MAELoss_Epoch6_BatchSize50_LR0.01_MaxBatchLoss16.683079.pth
+3. Models/GPU_WithResNet34_SGDOptim_MAELoss_Epoch6_BatchSize5_LR0.01_MaxBatchLoss23.802553.pth
+"""
+use_model_name = r"Models/GPU_WithResNet34_SGDOptim_MAELoss_Epoch6_BatchSize5_LR0.01_MaxBatchLoss23.802553.pth"
+
 
 # 文件名称
 network_name_without_suffix = NetNames[net_choice] + '_' + OptimNames[optim_choice] + \

@@ -1,20 +1,15 @@
 # 1950083 自动化 刘智宇
 import os
+from Consts import *
 import ToolFunction
 from WFLWdataset import WFLW_Dataset
 from Consts import *
 from KeyPointNet import KeyPointNet
+
 if __name__ == "__main__":
-    # 模型列表
-    """
-    Models/GPU_WithResNet18_SGDOptim_MAELoss_Epoch10_BatchSize50_LR0.01_MaxBatchLoss11.956532.pth
-    Models/GPU_WithResNet18_SGDOptim_MAELoss_Epoch6_BatchSize50_LR0.01_MaxBatchLoss16.683079.pth
-    Models/GPU_WithResNet34_SGDOptim_MAELoss_Epoch6_BatchSize5_LR0.01_MaxBatchLoss23.802553.pth
-    """
-    model_complete_name = r"Models/GPU_WithResNet34_SGDOptim_MAELoss_Epoch6_BatchSize5_LR0.01_MaxBatchLoss23.802553.pth"
     # ---------------------- 网络模型验证 ----------------------
     print(separate_bar*2, "网络模型验证：", separate_bar*2)
-    print(model_complete_name)
+    print(use_model_name)
 
     simple_annotation, origin_annotation_size, simple_annotation_size = read_annotation()
     simple_coords_annotation_float = simple_annotation[:, 0:img_relative_root_idx]  # 只取出坐标标注
@@ -24,7 +19,7 @@ if __name__ == "__main__":
     train_dataset = WFLW_Dataset(unify_coords_anno=unify_coords, img_paths_anno=img_paths_annotation)
 
     eval_net = KeyPointNet(net_choice)
-    eval_net.load_state_dict(torch.load(model_complete_name))
+    eval_net.load_state_dict(torch.load(use_model_name))
 
     # eval_net = torch.load(model_complete_name)
     # print(next(eval_net.parameters()).is_cuda)  # True

@@ -38,6 +38,8 @@ def GraphicDisplayLoss(net_name, train_loss_list, test_loss_list, batch_step_lis
 
     # 图片保存及展示
     fig_name = net_name + "_GraphicDisplay.jpg"
+    print("\n" + "训练过程可视化图表路径：")
+    print(fig_name)
     plt.savefig(fig_name)
     plt.show()
 

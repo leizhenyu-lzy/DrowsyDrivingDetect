@@ -18,6 +18,7 @@ import GraphicDisplay
 
 
 if __name__ == "__main__":
+    project_start_time = time.time()  # 项目计时起点
     # ---------------------- 前期准备工作工作 ----------------------
     print(separate_bar * 2, "模型训练准备工作开始", separate_bar * 2)
     # 对数据集、标注信息进行检查
@@ -87,15 +88,15 @@ if __name__ == "__main__":
     Loss = GetLoss();   Loss = Loss.to(device)  # 转入GPU
     Optimizer = GetOptimizer(optim_idx=sgd_idx, parameter=net.parameters(), LR=train_lr)
 
-    train_loss = torch.tensor(0.0, dtype=torch.float32);        train_loss = train_loss.to(device)
-    test_loss = torch.tensor(0.0, dtype=torch.float32);         test_loss = train_loss.to(device)
-    test_average_loss = torch.tensor(0.0, dtype=torch.float32); test_average_loss = train_loss.to(device)
-    test_sum_loss = torch.tensor(0.0, dtype=torch.float32);     test_sum_loss = train_loss.to(device)
-    epoch_loss = torch.tensor(0.0, dtype=torch.float32);        epoch_loss = epoch_loss.to(device)
-    max_batch_loss = torch.tensor(0.0, dtype=torch.float32);    max_batch_loss = max_batch_loss.to(device)  # 记录最后一个epoch的最大batchloss
-    total_train_steps = 0
+    train_loss = torch.tensor(0.0, dtype=torch.float32);            train_loss = train_loss.to(device)
+    train_average_loss = torch.tensor(0.0, dtype=torch.float32);    train_average_loss = train_average_loss.to(device)
+    test_loss = torch.tensor(0.0, dtype=torch.float32);             test_loss = train_loss.to(device)
+    test_average_loss = torch.tensor(0.0, dtype=torch.float32);     test_average_loss = train_loss.to(device)
+    test_sum_loss = torch.tensor(0.0, dtype=torch.float32);         test_sum_loss = train_loss.to(device)
+    epoch_loss = torch.tensor(0.0, dtype=torch.float32);            epoch_loss = epoch_loss.to(device)
+    max_batch_loss = torch.tensor(0.0, dtype=torch.float32);        max_batch_loss = max_batch_loss.to(device)  # 记录最后一个epoch的最大batchloss
 
-    start_time = time.time()  # 计时起点
+    total_train_steps = 0
 
     train_loss_list = [];   test_loss_list = []
     batch_step_list = [];   epoch_step_list = []
@@ -103,11 +104,14 @@ if __name__ == "__main__":
     # 训练
     net.train()
     for epoch_index in range(train_epoch):
+        epoch_start_time = time.time()
         print("Epoch: {}".format(epoch_index), " Start.")
         # 归零
         epoch_loss = 0.0
         max_batch_loss = 0.0
         for batch_index, inputs in enumerate(train_dataloader):
+            batch_start_time = time.time()
+
             loss = 0.0
             unify_gray_img, actual_coords = inputs  # 变量必须inplace
             unify_gray_img = unify_gray_img.to(device)
@@ -127,40 +131,36 @@ if __name__ == "__main__":
             Optimizer.step()
 
             # 训练到一定步骤后进行结果展示
-            if total_train_steps % train_result_show_steps == 0:
-                end_time = time.time()
-                print("Epoch:{}  Batch:{}  TrainSteps:{}  BatchLoss:{}  BatchTimeConsume:{}".format(epoch_index, batch_index, total_train_steps, loss, end_time-start_time))
+            if (total_train_steps + 1) % test_show_train_result_steps == 0:
+                # 在结果展示的时候进行test训练在测试集上进行测试
+                with torch.no_grad():
+                    net.eval()
+                    for test_inputs in test_dataloader:
+                        test_unify_gray_img, test_actual_coords = test_inputs
+                        test_unify_gray_img = test_unify_gray_img.to(device)
+                        test_actual_coords = test_actual_coords.to(device)
+                        test_actual_coords = test_actual_coords.float()
+                        test_train_coords = net(test_unify_gray_img)
+                        test_loss = Loss(test_actual_coords, test_train_coords)
+                        test_sum_loss += test_loss
+                    test_average_loss = test_sum_loss / (test_simple_annotation_shape[0])
+                    test_loss_list.append(test_average_loss.detach().cpu())
+                    epoch_step_list.append(total_train_steps - 1)  # -1是为了使得epoch结束的位置统一（每个batch结束的时候steps会递增）
 
-            # 记录最后一个epoch的最大batch_loss
-            if loss > max_batch_loss:
-                max_batch_loss = loss
+                    batch_end_time = time.time()
+                    train_average_loss = train_loss.detach().cpu()
+                    print("Epoch:{}  Batch:{}  TrainSteps:{}  TrainAverageLoss:{}  TestAverageLoss:{}  BatchTimeConsume:{}".format(epoch_index, batch_index, total_train_steps, train_average_loss, test_average_loss, batch_end_time - batch_start_time))
 
             # 将数据添加进列表中
-            train_loss_list.append(train_loss.detach().cpu())
+            train_loss_list.append(train_average_loss)
             batch_step_list.append(total_train_steps)
 
             total_train_steps = total_train_steps + 1   # 训练次数数递增
             epoch_loss += loss  # 每一个batch的训练loss累计到epoch的loss
 
-        # 训练完一个epoch，在测试集上进行测试
-        with torch.no_grad():
-            net.eval()
-            for test_inputs in test_dataloader:
-                test_unify_gray_img, test_actual_coords = test_inputs
-                test_unify_gray_img = test_unify_gray_img.to(device)
-                test_actual_coords = test_actual_coords.to(device)
-                test_actual_coords = test_actual_coords.float()
-                test_train_coords = net(test_unify_gray_img)
-                test_loss = Loss(test_actual_coords, test_train_coords)
-                test_sum_loss += test_loss
-
-            test_average_loss = test_sum_loss / (test_simple_annotation_shape[0])
-        test_loss_list.append(test_average_loss)
-        epoch_step_list.append(total_train_steps - 1)  # -1是为了使得epoch结束的位置统一（每个batch结束的时候steps会递增）
-
         # 输出一个Epoch的结果
-        end_time = time.time()  # 计时终点
-        print("Epoch:{}  End.  EpochLoss:{}  MaxBatchLoss:{}  EpochTimeConsume:{}".format(epoch_index, epoch_loss, max_batch_loss, end_time-start_time))
+        epoch_end_time = time.time()  # 计时终点
+        print("Epoch:{}  End.  EpochLoss:{}  MaxBatchLoss:{}  EpochTimeConsume:{}".format(epoch_index, epoch_loss, max_batch_loss, epoch_end_time - epoch_start_time))
     print(separate_bar * 2, "模型训练结束", separate_bar * 2)
     # 模型训练结束
 
@@ -169,7 +169,6 @@ if __name__ == "__main__":
 
     # 模型保存开始
     print("\n" + "网络保存：")
-    max_batch_loss = str(max_batch_loss.detach().cpu().numpy())
     network_name_without_suffix = network_name_prefix + network_name_without_suffix
     network_save_path_without_suffix = os.path.join(nets_save_dir, network_name_without_suffix)
     network_complete_save_path = network_save_path_without_suffix + "_MaxBatchLoss" + str(max_batch_loss) + ".pth"
@@ -183,3 +182,7 @@ if __name__ == "__main__":
     print("\n" + "训练过程可视化：")
     GraphicDisplay.GraphicDisplayLoss(net_name=network_complete_save_path, train_loss_list=train_loss_list,
                                       test_loss_list=test_loss_list, batch_step_list=batch_step_list, epoch_step_list=epoch_step_list)
+
+    # ---------------------- 项目总耗时 ----------------------
+    project_end_time = time.time()  # 项目计时终点
+    print("\n" + "项目总耗时：", project_end_time - project_start_time)
