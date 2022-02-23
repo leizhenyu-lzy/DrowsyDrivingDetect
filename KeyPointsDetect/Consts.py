@@ -122,7 +122,7 @@ test_dataset_name = "WFLW_test"
 # Color
 bgr_Blue = (255, 0, 0)
 bgr_Green = (0, 255, 0)
-bgr_Red = (0, 0, 0)
+bgr_Red = (0, 0, 255)
 bgr_Black = (0, 0, 0)
 bgr_White = (255, 255, 255)
 bgr_Yellow = (0, 255, 255)

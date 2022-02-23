@@ -145,11 +145,11 @@ if __name__ == "__main__":
                         test_sum_loss += test_loss
                     test_average_loss = test_sum_loss / (test_simple_annotation_shape[0])
                     test_loss_list.append(test_average_loss.detach().cpu())
-                    epoch_step_list.append(total_train_steps - 1)  # -1是为了使得epoch结束的位置统一（每个batch结束的时候steps会递增）
+                    epoch_step_list.append(total_train_steps + 1)  # -1是为了使得epoch结束的位置统一（每个batch结束的时候steps会递增）
 
                     batch_end_time = time.time()
                     train_average_loss = train_loss.detach().cpu()
-                    print("Epoch:{}  Batch:{}  TrainSteps:{}  TrainAverageLoss:{}  TestAverageLoss:{}  BatchTimeConsume:{}".format(epoch_index, batch_index, total_train_steps, train_average_loss, test_average_loss, batch_end_time - batch_start_time))
+                    print("Epoch:{}  Batch:{}  TrainSteps:{}  TrainAverageLoss:{}  TestAverageLoss:{}  BatchTimeConsume:{}".format(epoch_index, batch_index, total_train_steps + 1, train_average_loss, test_average_loss, batch_end_time - batch_start_time))
 
             # 将数据添加进列表中
             train_loss_list.append(train_average_loss)
