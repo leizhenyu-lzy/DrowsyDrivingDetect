@@ -3,11 +3,11 @@ import torch
 import os
 import cv2 as cv
 import numpy as np
+import pandas as pd
 from Consts import *
 
-# MSE
-# MAE
-# CROSSENTROPY
+
+print()
 
 
 """
@@ -52,9 +52,9 @@ def unify_img_coords_annotation(not_unify_coords, img_paths):
         y_min = not_unify_coords[img_idx][y_min_rect_idx]; y_max = not_unify_coords[img_idx][y_max_rect_idx]
         rect_x = x_max - x_min; rect_y = y_max - y_min
         for point_idx in range(left_eye_start, inner_lip_end * 2 + 2, 2):
-            unify_coords[img_idx][point_idx] = (not_unify_coords[img_idx][point_idx]-x_min)*unify_image_size[0]/rect_x
+            unify_coords[img_idx][point_idx] = (not_unify_coords[img_idx][point_idx]-x_min) * unify_gray_image_size[0] / rect_x
         for point_idx in range(left_eye_start + 1, inner_lip_end * 2 + 2, 2):
-            unify_coords[img_idx][point_idx] = (not_unify_coords[img_idx][point_idx]-y_min)*unify_image_size[1]/rect_y
+            unify_coords[img_idx][point_idx] = (not_unify_coords[img_idx][point_idx]-y_min) * unify_gray_image_size[1] / rect_y
 
     # 输出验证信息，返回结果
     # print(unify_coords, unify_coords.shape, unify_coords.dtype)  # (7500, 76) int32
@@ -112,13 +112,13 @@ def show_key_points_in_unify_img(unify_coords, img_path, unify_img=False, imread
         img = cv.imread(img_path, flags=imread_type)
         img_unify = img[unify_coords[row_min_rect_idx]:unify_coords[row_max_rect_idx],
                         unify_coords[col_min_rect_idx]:unify_coords[col_max_rect_idx]]
-        img_unify = cv.resize(img_unify, unify_image_size)
-    else:  # 传入的图片经过unify，无需resize
+        img_unify = cv.resize(img_unify, unify_gray_image_size)
+    else:  # 传入的图片经过unify，无需resize，也就不需要矩形框
         img_unify = cv.imread(img_path, flags=imread_type)
     # print(img_color_unify.shape)
 
     for i in range(key_points_numbers):
-        cv.circle(img_unify, center=(unify_coords[2 * i], unify_coords[2 * i + 1]), radius=0, color=bgr_Pink, thickness=3)
+        cv.circle(img_unify, center=(unify_coords[2 * i], unify_coords[2 * i + 1]), radius=0, color=bgr_Pink, thickness=2)
 
     cv.imshow("key points", img_unify)
     cv.waitKey(wait_time)
@@ -138,19 +138,36 @@ pass
 def show_train_key_points_in_unify_img(Net, Dataset, image_paths, unify_int_coords, show_train_image_idx, unify_img=False, imread_type=cv.IMREAD_COLOR, wait_time=1500):
     Net.eval()
     unify_gray_image, actual_coords = Dataset[show_train_image_idx]
-    unify_gray_image = torch.reshape(unify_gray_image, (-1, 1, unify_image_size[0], unify_image_size[1]))
+    unify_gray_image = torch.reshape(unify_gray_image, (-1, 1, unify_gray_image_size[0], unify_gray_image_size[1]))  # 更改形状（添加维度）
     # unify_gray_image = unify_gray_image.to(device)  # 一定要to(device)否则报错:Input type (torch.FloatTensor) and weight type (torch.cuda.FloatTensor) should be the same
     train_coords = Net(unify_gray_image)
     train_coords = train_coords.detach().cpu().numpy()  # 转换为 <class 'numpy.ndarray'>  # 一定要.cpu()否则在GPU上无法正常运行
     train_coords = np.reshape(train_coords, -1)  # 拉成一维数组
     # print(train_coords.shape)  # 72
-    train_coords = np.append(train_coords, unify_int_coords[show_train_image_idx][x_min_rect_idx:y_max_rect_idx+1])
+    train_coords = np.append(train_coords, unify_int_coords[show_train_image_idx][x_min_rect_idx:y_max_rect_idx+1])  # 加上矩形框大小
     train_coords = train_coords.astype(np.int32)  # 一定要数据类型转换
     train_img_path = image_paths[show_train_image_idx]
     print("eval_train_coords")
     print(train_coords)
     show_key_points_in_unify_img(unify_coords=train_coords, img_path=train_img_path, unify_img=False, imread_type=imread_type, wait_time=wait_time)
     return train_coords
+
+
+"""
+
+"""
+def get_train_key_points_in_unify_img_from_camera(Net, unify_color_img, unify_gray_tensor_img):
+    Net.eval()
+    unify_gray_image = torch.reshape(unify_gray_tensor_img, unify_tensor_image_size)  # 更改形状（添加维度）
+    unify_gray_image = unify_gray_image.to(device)
+    train_coords = Net(unify_gray_image)
+    train_coords = train_coords.detach().cpu().numpy()  # 转换为 <class 'numpy.ndarray'>  # 一定要.cpu()否则在GPU上无法正常运行
+    train_coords = np.reshape(train_coords, -1)  # 拉成一维数组
+    train_coords = train_coords.astype(np.int32)  # 一定要数据类型转换
+    for i in range(key_points_numbers):
+        cv.circle(unify_color_img, center=(train_coords[2 * i], train_coords[2 * i + 1]), radius=0, color=bgr_Pink, thickness=3)
+    return train_coords
+
 
 
 """
@@ -281,6 +298,36 @@ def testGPU():
         print("Only CPU is available. Use CPU.")
         # print(separate_bar, "GPU测试结束", separate_bar)
         return False
+
+
+"""
+name:       read_annotation
+functional: use pandas to read the annotation.txt and get the simplified information
+inputs:     root_dir : directory of the annotation file (default : train_dataset_annotation_dir)
+outputs:    annotation  (<class 'numpy.ndarray'>)
+            size of the origin annotation 
+            size of the simple annotation
+"""
+def read_annotation(root_dir=train_dataset_annotation_dir):
+    # 使用pandas读取完整的标注进入DataFrame
+    origin_annotation = pd.read_csv(filepath_or_buffer=root_dir, sep=' ', header=None, index_col=None)
+    origin_annotation = origin_annotation.values  # 转化为列表形式
+    origin_annotation_shape = origin_annotation.shape
+    # print(origin_annotation_shape)
+    # 取出关注的关键点，简化标注
+    simple_annotation_p1 = origin_annotation[:, left_eye_start_ * 2: inner_lip_end_ * 2 + 2]  # 眼睛嘴唇的关键点正好连续
+    simple_annotation_p2 = origin_annotation[:, x_min_rect_idx_: y_max_rect_idx_ + 1]  # 脸部矩形的两个点
+    simple_annotation_p3 = origin_annotation[:, img_relative_root_idx_]  # 对应图像路径
+    simple_annotation_p3 = simple_annotation_p3[:, np.newaxis]  # 添加新维度，否则无法进行concatenate操作
+    # print(simple_annotation_p1.shape, type(simple_annotation_p1))  # (7500, 72) <class 'numpy.ndarray'>
+    # print(simple_annotation_p2.shape, type(simple_annotation_p2))  # (7500, 4) <class 'numpy.ndarray'>
+    # print(simple_annotation_p3.shape, type(simple_annotation_p3))  # (7500, 1) <class 'numpy.ndarray'>
+    # 合成简化的标注
+    simple_annotation = np.concatenate((simple_annotation_p1, simple_annotation_p2, simple_annotation_p3), axis=1)
+    # print(simple_annotation)
+    simple_annotation_shape = simple_annotation.shape
+    # print(simple_annotation_shape)  # (7500, 77)
+    return simple_annotation, origin_annotation_shape, simple_annotation_shape
 
 
 if __name__ == "__main__":

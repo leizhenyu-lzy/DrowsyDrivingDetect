@@ -1,6 +1,5 @@
 # 1950083 自动化 刘智宇
-import os
-from Consts import *
+import numpy as np
 import ToolFunction
 from WFLWdataset import WFLW_Dataset
 from Consts import *
@@ -11,7 +10,7 @@ if __name__ == "__main__":
     print(separate_bar*2, "网络模型验证：", separate_bar*2)
     print(use_model_name)
 
-    simple_annotation, origin_annotation_size, simple_annotation_size = read_annotation()
+    simple_annotation, origin_annotation_size, simple_annotation_size = ToolFunction.read_annotation()
     simple_coords_annotation_float = simple_annotation[:, 0:img_relative_root_idx]  # 只取出坐标标注
     simple_coords_annotation_int = simple_coords_annotation_float.astype(np.int32)  # 讲坐标标注转为整形方便opencv处理
     img_paths_annotation = simple_annotation[:, -1]  # 只取出文件路径标注
@@ -37,9 +36,9 @@ if __name__ == "__main__":
     # while True:
     eval_img_idx = input("Index of the Image and the Key Points you want to check (0-7499) : ")
     # print(type(eval_img_idx))  # <class 'str'>
-    eval_img_idx = int(eval_img_idx)
-    if eval_img_idx < 0 or eval_img_idx > 7499:
-        eval_img_idx = 1234
+    eval_img_idx = int(eval_img_idx)  # 转为整形
+    if eval_img_idx < 0 or eval_img_idx > 7499:  # 对超出范围的图片进行限制
+        eval_img_idx = 250
 
     print("eval_actual_coords")
     print(unify_coords[eval_img_idx])

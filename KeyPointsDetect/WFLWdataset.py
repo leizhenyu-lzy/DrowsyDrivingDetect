@@ -39,7 +39,7 @@ class WFLW_Dataset(Dataset):
             img_gray_whole = cv.imread(img_path, cv.IMREAD_GRAYSCALE)
             img_gray_rect_cut = img_gray_whole[unify_coords[row_min_rect_idx]:unify_coords[row_max_rect_idx],
                                                unify_coords[col_min_rect_idx]:unify_coords[col_max_rect_idx]]
-            img_gray_unify = cv.resize(img_gray_rect_cut, unify_image_size)
+            img_gray_unify = cv.resize(img_gray_rect_cut, unify_gray_image_size)
             # cv.imshow("img_gray_unify", img_gray_unify)
             # print(img_gray_unify.shape)
             # cv.waitKey(1000)

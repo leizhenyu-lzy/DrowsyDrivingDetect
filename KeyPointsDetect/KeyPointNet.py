@@ -4,13 +4,13 @@ from torch import nn, optim
 import torchvision.models
 from Consts import *
 
-alexnet_not_pretrain = torchvision.models.alexnet(pretrained=False)
-resnet18_not_pretrain = torchvision.models.resnet18(pretrained=False)
-resnet34_not_pretrain = torchvision.models.resnet34(pretrained=False)
-resnet50_not_pretrain = torchvision.models.resnet50(pretrained=False)
-resnet101_not_pretrain = torchvision.models.resnet101(pretrained=False)
-googlenet_not_pretrain = torchvision.models.googlenet(pretrained=False)
-vgg16_not_pretrain = torchvision.models.vgg16(pretrained=False)
+with_alexnet = torchvision.models.alexnet(pretrained=net_pretrain)
+with_resnet18 = torchvision.models.resnet18(pretrained=net_pretrain)
+with_resnet34 = torchvision.models.resnet34(pretrained=net_pretrain)
+with_resnet50 = torchvision.models.resnet50(pretrained=net_pretrain)
+with_googlenet = torchvision.models.googlenet(pretrained=net_pretrain)
+with_vgg16 = torchvision.models.vgg16(pretrained=net_pretrain)
+
 
 def GetLoss(loss_idx=lossfunc_choice):
     if loss_idx == mse_idx:
@@ -56,58 +56,56 @@ class KeyPointNet(nn.Module):
                 nn.BatchNorm2d(num_features=1),  # 1*12*12
                 nn.Flatten(),  # 144
                 nn.ReLU(inplace=True),
-                nn.Linear(in_features=144, out_features=72),  # 72
+                nn.Linear(in_features=144, out_features=72, bias=True),  # 72
             )
-            for _, param in enumerate(self.net.named_parameters()):
-                if param[0] == "15.bias":
-                    param[1].requires_grad = False  # 不对bias进行训练
-                    # print(param[0])
-                    # print(param[1])
+            if not net_train_bias:  # 不对线性层的bias进行训练
+                for _, param in enumerate(self.net.named_parameters()):
+                    if param[0] == "15.bias":
+                        param[1].requires_grad = False
+
         elif NetChoice == with_alexnet_idx:  # 输入输出参数维数已匹配
             self.net = nn.Sequential(
                 nn.Conv2d(in_channels=1, out_channels=3, kernel_size=3, stride=1, padding=1),
-                alexnet_not_pretrain,  # output_shape: 1000
-                nn.Linear(in_features=1000, out_features=key_points_numbers*2, bias=True)
+                with_alexnet,  # output_shape: 1000
+                nn.Linear(in_features=1000, out_features=key_points_numbers*2, bias=net_train_bias)
             )
         elif NetChoice == with_resnet18_idx:
             self.net = nn.Sequential(
                 nn.Conv2d(in_channels=1, out_channels=3, kernel_size=3, padding=1),
-                resnet18_not_pretrain,
-                nn.Linear(in_features=1000, out_features=key_points_numbers*2, bias=True),
+                with_resnet18,
+                nn.BatchNorm1d(num_features=1000),
+                nn.Linear(in_features=1000, out_features=key_points_numbers*2, bias=net_train_bias),
             )
-            for _, param in enumerate(self.net.named_parameters()):
-                # print(param[0])
-                # print(param[1])
-                if param[0] == "2.bias":
-                    param[1].requires_grad = False  # 不对bias进行训练
-                    # print(param[0])
-                    # print(param[1])
+            if not net_train_bias:  # 不对线性层的bias进行训练
+                for _, param in enumerate(self.net.named_parameters()):
+                    if param[0] == "2.bias":
+                        param[1].requires_grad = False  # 不对bias进行训练
         elif NetChoice == with_resnet34_idx:
             self.net = nn.Sequential(
                 nn.Conv2d(in_channels=1, out_channels=3, kernel_size=3, padding=1),
-                resnet34_not_pretrain,
-                nn.Linear(in_features=1000, out_features=key_points_numbers * 2, bias=True),
+                with_resnet34,
+                nn.Linear(in_features=1000, out_features=key_points_numbers * 2, bias=net_train_bias),
             )
-            for _, param in enumerate(self.net.named_parameters()):
-                # print(param[0])
-                # print(param[1])
-                if param[0] == "2.bias":
-                    param[1].requires_grad = False  # 不对bias进行训练
-                    # print(param[0])
-                    # print(param[1])
+            # for _, param in enumerate(self.net.named_parameters()):
+            #     # print(param[0])
+            #     # print(param[1])
+            #     if param[0] == "2.bias":
+            #         param[1].requires_grad = False  # 不对bias进行训练
+            #         # print(param[0])
+            #         # print(param[1])
         elif NetChoice == with_resnet50_idx:
             self.net = nn.Sequential(
                 nn.Conv2d(in_channels=1, out_channels=3, kernel_size=3, padding=1),
-                resnet50_not_pretrain,
-                nn.Linear(in_features=1000, out_features=key_points_numbers * 2, bias=True),
+                with_resnet50,
+                nn.Linear(in_features=1000, out_features=key_points_numbers * 2, bias=net_train_bias),
             )
-            for _, param in enumerate(self.net.named_parameters()):
-                # print(param[0])
-                # print(param[1])
-                if param[0] == "2.bias":
-                    param[1].requires_grad = False  # 不对bias进行训练
-                    # print(param[0])
-                    # print(param[1])
+            # for _, param in enumerate(self.net.named_parameters()):
+            #     # print(param[0])
+            #     # print(param[1])
+            #     if param[0] == "2.bias":
+            #         param[1].requires_grad = False  # 不对bias进行训练
+            #         # print(param[0])
+            #         # print(param[1])
         elif NetChoice == with_googlenet_idx:
             self.net = nn.Sequential(
 
