@@ -50,9 +50,9 @@ train_batch_size = 5;   test_batch_size = 5
 train_lr = 0.00008
 test_show_train_result_steps = 250  # 训练到多少次的时候输出结果
 
-net_choice = with_resnet18_idx  # 选择模型类型
+net_choice = with_resnet34_idx  # 选择模型类型
 net_pretrain = True
-net_train_bias = True
+net_train_bias = False
 optim_choice = sgd_idx
 lossfunc_choice = mae_idx
 
@@ -62,10 +62,9 @@ lossfunc_choice = mae_idx
 按训练顺序排列：
 1. Models/GPU_WithResNet18_NotPretrain_SGDOptim_MAELoss_Epoch5_BatchSize5_LR8e-05_LastAverageLoss134.12452697753906.pth
 2. Models/GPU_WithResNet18_Pretrain_SGDOptim_MAELoss_Epoch5_BatchSize5_LR8e-05_LastAverageLoss107.23147583007812.pth
-3. 
+3. Models/GPU_WithResNet34_Pretrain_SGDOptim_MAELoss_Epoch5_BatchSize5_LR8e-05_LastAverageLoss104.69.pth
 """
-use_model_name = r"Models/GPU_WithResNet18_Pretrain_SGDOptim_MAELoss_Epoch5_BatchSize5_LR8e-05_LastAverageLoss107.23147583007812.pth"
-
+use_model_name = r"Models/GPU_WithResNet34_Pretrain_SGDOptim_MAELoss_Epoch5_BatchSize5_LR8e-05_LastAverageLoss104.69.pth"
 
 # 文件名称
 net_pretrain_prefix = "Pretrain" if net_pretrain else "NotPretrain"
@@ -146,5 +145,10 @@ if __name__ == "__main__":
     print(os.path.isfile(net_name_without_suffix))  # False
 
 
-
+"""
+name:       
+functional: 
+inputs:     
+outputs:    
+"""
 

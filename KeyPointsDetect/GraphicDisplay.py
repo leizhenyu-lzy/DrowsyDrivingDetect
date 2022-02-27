@@ -32,8 +32,8 @@ def GraphicDisplayLoss(net_name, train_loss_list, test_loss_list, train_step_lis
     print("模型训练及测试数据长度检查通过")
     plt.figure(num="GraphicShow")
     plt.title(net_name)
-    train_loss_fig = plt.plot(train_step_list, train_loss_list, color="b", linestyle="-", marker='+', label="train loss")
-    test_loss_fig = plt.plot(test_step_list, test_loss_list, color="r", linestyle="-.", marker='+', label="test loss")
+    train_loss_fig = plt.plot(train_step_list, train_loss_list, color="b", linestyle="-", marker='.', label="train loss")
+    test_loss_fig = plt.plot(test_step_list, test_loss_list, color="r", linestyle="-.", marker='.', label="test loss")
 
     plt.xlabel("Train Steps")
     plt.ylabel("Batch Loss")

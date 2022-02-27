@@ -84,15 +84,13 @@ class KeyPointNet(nn.Module):
             self.net = nn.Sequential(
                 nn.Conv2d(in_channels=1, out_channels=3, kernel_size=3, padding=1),
                 with_resnet34,
+                nn.BatchNorm1d(num_features=1000),
                 nn.Linear(in_features=1000, out_features=key_points_numbers * 2, bias=net_train_bias),
             )
-            # for _, param in enumerate(self.net.named_parameters()):
-            #     # print(param[0])
-            #     # print(param[1])
-            #     if param[0] == "2.bias":
-            #         param[1].requires_grad = False  # 不对bias进行训练
-            #         # print(param[0])
-            #         # print(param[1])
+            if not net_train_bias:  # 不对线性层的bias进行训练
+                for _, param in enumerate(self.net.named_parameters()):
+                    if param[0] == "3.bias":
+                        param[1].requires_grad = False  # 不对bias进行训练
         elif NetChoice == with_resnet50_idx:
             self.net = nn.Sequential(
                 nn.Conv2d(in_channels=1, out_channels=3, kernel_size=3, padding=1),
