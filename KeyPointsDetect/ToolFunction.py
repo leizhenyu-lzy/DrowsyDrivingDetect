@@ -7,9 +7,6 @@ import pandas as pd
 from Consts import *
 
 
-print()
-
-
 """
 name:       count_files
 functional: count number of files in a directory(use:os.walk)

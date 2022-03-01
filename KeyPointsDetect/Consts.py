@@ -39,21 +39,21 @@ adam_idx = sgd_idx + 1
 
 
 # DataLoader Consts
-train_shuffle = False;  test_shuffle = False
+train_shuffle = True;  test_shuffle = True
 train_drop_last = True; test_drop_last = True
 train_num_workers = 0;  test_num_workers = 0
 
 
 # 可改动的地方
 train_epoch = 5
-train_batch_size = 5;   test_batch_size = 5
-train_lr = 0.00008
-test_show_train_result_steps = 250  # 训练到多少次的时候输出结果
+train_batch_size = 10;   test_batch_size = 10
+train_lr = 0.00004
+test_show_train_result_steps = 125  # 训练到多少次的时候输出结果
 
-net_choice = with_resnet34_idx  # 选择模型类型
+net_choice = with_resnet18_idx  # 选择模型类型
 net_pretrain = True
-net_train_bias = False
-optim_choice = sgd_idx
+net_train_bias = True
+optim_choice = adam_idx
 lossfunc_choice = mae_idx
 
 
@@ -63,8 +63,9 @@ lossfunc_choice = mae_idx
 1. Models/GPU_WithResNet18_NotPretrain_SGDOptim_MAELoss_Epoch5_BatchSize5_LR8e-05_LastAverageLoss134.12452697753906.pth
 2. Models/GPU_WithResNet18_Pretrain_SGDOptim_MAELoss_Epoch5_BatchSize5_LR8e-05_LastAverageLoss107.23147583007812.pth
 3. Models/GPU_WithResNet34_Pretrain_SGDOptim_MAELoss_Epoch5_BatchSize5_LR8e-05_LastAverageLoss104.69.pth
+4. Models/GPU_WithResNet18_Pretrain_AdamOptim_MAELoss_Epoch5_BatchSize10_LR4e-05_LastAverageLoss77.09.pth
 """
-use_model_name = r"Models/GPU_WithResNet34_Pretrain_SGDOptim_MAELoss_Epoch5_BatchSize5_LR8e-05_LastAverageLoss104.69.pth"
+use_model_name = r"Models/GPU_WithResNet18_Pretrain_AdamOptim_MAELoss_Epoch5_BatchSize10_LR4e-05_LastAverageLoss77.09.pth"
 
 # 文件名称
 net_pretrain_prefix = "Pretrain" if net_pretrain else "NotPretrain"
