@@ -1,7 +1,7 @@
 数据库存储信息:
-1. 姓名（varchar(10)）
-2. 工号（varchar(10)）
-3. 性别（m/f）
+1. 姓名（varchar(20)）
+2. 工号（double）
+3. 性别（m/f）（varchar(10)）
 4. 开始驾驶时间（float、double）
 5. 起点（varchar(40)）
 6. 终点（varchar(40)）
